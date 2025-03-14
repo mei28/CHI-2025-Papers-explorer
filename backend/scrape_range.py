@@ -91,8 +91,9 @@ def save_to_json(data, filename="scraped_data.json"):
     print(f"Data saved to {filename}")
 
 if __name__ == "__main__":
-    start_id = 188582
-    end_id = 188585
+    # 188211 → ok 189669 → ok
+    start_id = 188211
+    end_id = 189669
     scraped_results = scrape_id_range(start_id, end_id, sleep_time=0.5)
-    save_to_json(scraped_results, "scraped_data.json")
+    save_to_json(scraped_results, "data/scraped_data_0314.json")
 
