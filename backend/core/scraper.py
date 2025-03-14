@@ -19,13 +19,17 @@ def extract_title(soup):
     return elem.get_text(strip=True) if elem else None
 
 def extract_abstract(soup):
-    abstract_elem = None
-    # ページ内の p.p-small から、white-block 内に属していないものを抽出（abstract用）
-    for p in soup.select(ABSTRACT_SELECTOR):
-        if not p.find_parent("white-block"):
-            abstract_elem = p
-            break
-    return abstract_elem.get_text(strip=True) if abstract_elem else None
+    """
+    white-block 内で、<h4> に "Abstract" が含まれるブロックから
+    <p class="p-small"> のテキストを抽出します。
+    """
+    for block in soup.find_all("white-block"):
+        header = block.find("h4")
+        if header and "Abstract" in header.get_text():
+            p = block.find("p", class_="p-small")
+            if p:
+                return p.get_text(strip=True)
+    return None
 
 def extract_authors(soup):
     authors = []
