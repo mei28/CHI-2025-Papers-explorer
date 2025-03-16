@@ -16,7 +16,10 @@ app = FastAPI(title="CHI Paper Search API")
 # CORS ミドルウェアの追加
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # フロントエンドのURLを指定
+    allow_origins=[
+        "http://localhost:5173",
+        "https://mei28.github.io/*",
+    ],  # フロントエンドのURLを指定
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
