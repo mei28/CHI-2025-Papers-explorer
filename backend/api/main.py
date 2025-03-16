@@ -2,16 +2,25 @@ from fastapi import FastAPI, Query, HTTPException
 from pydantic import BaseModel
 from typing import List, Dict, Optional, Union
 import json
-import os
 from pathlib import Path
 import uvicorn
 import numpy as np
+from fastapi.middleware.cors import CORSMiddleware
 
 from backend.api.search.search_config import SEARCH_METHOD
 from backend.api.search.tfidf_search import TfidfSearch
 from backend.api.search.embedding_search import EmbeddingSearch
 
 app = FastAPI(title="CHI Paper Search API")
+
+# CORS ミドルウェアの追加
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # フロントエンドのURLを指定
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # データファイルのパス
 DATA_PATH = Path("data/scraped_data_0314.json")
@@ -21,6 +30,7 @@ UMAP_PATH = Path("data/umap_coordinates.json")
 # グローバル変数
 papers: List[Dict] = []
 search_engine: Optional[Union[TfidfSearch, EmbeddingSearch]] = None
+
 
 def load_data():
     """
@@ -40,6 +50,7 @@ def load_data():
         papers = []
         print("No data file found.")
 
+
 @app.on_event("startup")
 def startup_event():
     global search_engine
@@ -55,18 +66,35 @@ def startup_event():
         raise ValueError("Invalid SEARCH_METHOD")
     print(f"Using {SEARCH_METHOD} search method.")
 
+
+class Author(BaseModel):
+    name: str
+    affiliation: Optional[str] = None
+
+
+class Session(BaseModel):
+    session_name: Optional[str] = None
+    session_date: Optional[str] = None
+    session_venue: Optional[str] = None
+
+
 class SearchResult(BaseModel):
     id: int
     url: str
     title: str
     abstract: str
     score: float
+    authors: Optional[List[Author]] = []
+    details: Optional[Dict[str, str]] = {}
+    sessions: Optional[List[Session]] = []
+
 
 @app.get("/search", response_model=List[SearchResult])
 def search(query: str = Query(..., description="Search query string"), top_n: int = 10):
     assert search_engine is not None, "Search engine not initialized"
     results = search_engine.search(query, top_n=top_n)
     return results
+
 
 @app.get("/umap", response_model=Dict[str, List[float]])
 def get_umap_coordinates():
@@ -76,6 +104,6 @@ def get_umap_coordinates():
         return umap_coords
     return {}
 
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
-

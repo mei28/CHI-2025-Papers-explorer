@@ -44,6 +44,9 @@ class EmbeddingSearch:
                     "title": paper["title"],
                     "abstract": paper["abstract"],
                     "score": float(similarities[idx]),
+                    "authors": paper.get("authors", []),
+                    "details": paper.get("details", {}),
+                    "sessions": paper.get("sessions", []),
                 }
             )
         return results
