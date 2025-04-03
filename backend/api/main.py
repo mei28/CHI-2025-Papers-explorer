@@ -97,7 +97,7 @@ class SearchResult(BaseModel):
 @app.get("/search", response_model=List[SearchResult])
 def search(
     query: str = Query("", description="Search query string"),
-    top_n: int = Query(10, ge=1, le=100)
+    top_n: int = Query(10, ge=1, le=2000)
 ):
     assert search_engine is not None, "Search engine not initialized"
     
