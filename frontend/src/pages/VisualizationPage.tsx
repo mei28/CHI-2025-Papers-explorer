@@ -1,5 +1,3 @@
-// frontend/src/pages/VisualizationPage.tsx
-
 import React, { useEffect, useState } from "react";
 import Plot from "react-plotly.js";
 import { getUmapCoordinates, searchPapers } from "../utils/apiClient";
@@ -170,7 +168,7 @@ export const VisualizationPage: React.FC = () => {
         layout={{ title: "UMAP Scatter Plot", autosize: true, height: 600 }}
         useResizeHandler
         style={{ width: "100%" }}
-        onHover={(event) => {
+        onHover={(event: any) => {
           if (!selectedPaper && event.points && event.points[0]) {
             setHoveredPaper(event.points[0].customdata as Paper);
           }
@@ -180,7 +178,7 @@ export const VisualizationPage: React.FC = () => {
             setHoveredPaper(null);
           }
         }}
-        onClick={(event) => {
+        onClick={(event: any) => {
           if (event.points && event.points[0]) {
             setSelectedPaper(event.points[0].customdata as Paper);
           }
