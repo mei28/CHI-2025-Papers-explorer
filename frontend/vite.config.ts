@@ -6,6 +6,7 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  base: "/CHI-2025-Papers-explorer/",
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

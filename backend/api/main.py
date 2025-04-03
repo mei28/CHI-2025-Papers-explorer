@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Query, HTTPException
+from mangum import Mangum
 from pydantic import BaseModel
 from typing import List, Dict, Optional, Union
 import json
@@ -112,6 +113,9 @@ def get_umap_coordinates():
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
+
+
+handler = Mangum(app)
 
 
 if __name__ == "__main__":

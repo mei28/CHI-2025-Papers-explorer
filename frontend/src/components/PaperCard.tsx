@@ -41,7 +41,7 @@ interface PaperCardProps {
 }
 
 export const PaperCard: React.FC<PaperCardProps> = ({ paper }) => {
-  const { title, abstract = "", url, score, authors, details, sessions } = paper;
+  const { title, abstract = "", url, score, authors, sessions } = paper;
   const truncatedAbstract = truncateText(abstract, 250);
 
   // 著者情報：第一著者のみ表示。所属情報があれば "(affiliation)" を付加し、複数なら "et al." を追加
