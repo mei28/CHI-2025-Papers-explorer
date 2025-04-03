@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { CardGrid } from "../components/CardGrid";
 import { searchPapers } from "../utils/apiClient";
 import { Paper } from "../components/PaperCard";
@@ -12,6 +12,12 @@ export const SearchPage: React.FC = () => {
   const [papers, setPapers] = useState<Paper[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+
+  // 初回ロード時にランダムな論文を表示
+  useEffect(() => {
+    handleSearch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSearch = async () => {
     setLoading(true);
@@ -39,8 +45,11 @@ export const SearchPage: React.FC = () => {
           type="number"
           min={1}
           max={100}
-          value={topN}
-          onChange={(e) => setTopN(Number(e.target.value))}
+          value={topN.toString()}
+          onChange={(e) => {
+            const parsed = parseInt(e.target.value, 10);
+            setTopN(isNaN(parsed) || parsed < 1 ? 1 : parsed);
+          }}
           className="w-24"
         />
         <Button onClick={handleSearch} className="px-6">

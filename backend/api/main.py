@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Query, HTTPException
+import random
 from mangum import Mangum
 from pydantic import BaseModel
 from typing import List, Dict, Optional, Union
@@ -94,10 +95,36 @@ class SearchResult(BaseModel):
 
 
 @app.get("/search", response_model=List[SearchResult])
-def search(query: str = Query(..., description="Search query string"), top_n: int = 10):
+def search(
+    query: str = Query("", description="Search query string"),
+    top_n: int = Query(10, ge=1, le=100)
+):
     assert search_engine is not None, "Search engine not initialized"
-    results = search_engine.search(query, top_n=top_n)
-    return results
+    
+    # クエリが空の場合、ランダムな論文を返す
+    if query.strip() == "":
+        print("Empty query, returning random papers.")
+        # ランダムに top_n 件を取得
+        if not papers:
+            raise HTTPException(status_code=500, detail="No papers available")
+        random_results = random.sample(papers, min(top_n, len(papers)))
+        # スコアは 0.0 で返す
+        results = []
+        for paper in random_results:
+            results.append({
+                "id": paper["id"],
+                "url": paper["url"],
+                "title": paper["title"],
+                "abstract": paper.get("abstract") or "",
+                "score": 0.0,
+                "authors": paper.get("authors", []),
+                "details": paper.get("details", {}),
+                "sessions": paper.get("sessions", []),
+            })
+        return results
+    else:
+        results = search_engine.search(query, top_n=top_n)
+        return results
 
 
 @app.get("/umap", response_model=Dict[str, List[float]])
