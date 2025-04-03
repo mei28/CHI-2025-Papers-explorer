@@ -86,7 +86,7 @@ class SearchResult(BaseModel):
     id: int
     url: str
     title: str
-    abstract: str
+    abstract: Optional[str] ="" 
     score: float
     authors: Optional[List[Author]] = []
     details: Optional[Dict[str, str]] = {}
