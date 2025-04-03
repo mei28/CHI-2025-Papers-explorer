@@ -3,9 +3,10 @@ import { PaperCard, Paper } from "./PaperCard";
 
 interface CardGridProps {
   papers: Paper[];
+  onPaperHover?: (paper: Paper | null) => void; // 追加: ホバー時のコールバック
 }
 
-export const CardGrid: React.FC<CardGridProps> = ({ papers }) => {
+export const CardGrid: React.FC<CardGridProps> = ({ papers, onPaperHover }) => {
   return (
     <div
       className="grid gap-4"
@@ -13,7 +14,11 @@ export const CardGrid: React.FC<CardGridProps> = ({ papers }) => {
     >
       {papers.map((paper) => (
         <div key={paper.id}>
-          <PaperCard paper={paper} />
+          <PaperCard
+            paper={paper}
+            onMouseEnter={(p) => onPaperHover && onPaperHover(p)}
+            onMouseLeave={() => onPaperHover && onPaperHover(null)}
+          />
         </div>
       ))}
     </div>

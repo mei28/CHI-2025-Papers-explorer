@@ -34,17 +34,18 @@ export interface Paper {
 }
 
 const truncateText = (text: string, maxLen: number): string =>
-  text.length > maxLen ? text.slice(0, maxLen).trim() + "..." : text;
+  (text && text.length > maxLen) ? text.slice(0, maxLen).trim() + "..." : text;
 
 interface PaperCardProps {
   paper: Paper;
+  onMouseEnter?: (paper: Paper) => void;
+  onMouseLeave?: () => void;
 }
 
-export const PaperCard: React.FC<PaperCardProps> = ({ paper }) => {
+export const PaperCard: React.FC<PaperCardProps> = ({ paper, onMouseEnter, onMouseLeave }) => {
   const { title, abstract = "", url, score, authors, sessions } = paper;
   const truncatedAbstract = truncateText(abstract, 250);
 
-  // 著者情報：第一著者のみ表示。所属情報があれば "(affiliation)" を付加し、複数なら "et al." を追加
   let authorDisplay = "Unknown Author";
   if (authors && authors.length > 0) {
     const first = authors[0];
@@ -57,19 +58,23 @@ export const PaperCard: React.FC<PaperCardProps> = ({ paper }) => {
     }
   }
 
-
-  // セッション情報（最初のセッションのみ）
   let sessionInfo = "";
   if (sessions && sessions.length > 0) {
     const s = sessions[0];
     sessionInfo = `${s.session_name || "N/A"}\n${s.session_date || "N/A"}\n${s.session_venue || "N/A"}`;
   }
 
-  // 複数情報をまとめる。ここでは details と sessionInfo を改行で分けて表示
-  const extraInfo = [sessionInfo].filter(Boolean).join("\n");
+  const extraInfo = sessionInfo; // ここで details などを追加する場合は、適宜連結してください
 
   return (
-    <a href={url} target="_blank" rel="noopener noreferrer" className="block">
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block"
+      onMouseEnter={() => onMouseEnter && onMouseEnter(paper)}
+      onMouseLeave={() => onMouseLeave && onMouseLeave()}
+    >
       <Card className="w-full h-full">
         <CardHeader>
           <CardTitle className="text-lg font-bold">{title}</CardTitle>
@@ -78,7 +83,7 @@ export const PaperCard: React.FC<PaperCardProps> = ({ paper }) => {
           <div className="text-xs text-gray-500">Author: {authorDisplay}</div>
           <div className="text-sm text-gray-700">{truncatedAbstract}</div>
           <div className="text-xs text-gray-500 whitespace-pre-wrap">
-            {extraInfo}
+            {truncateText(extraInfo, 150)}
           </div>
         </CardContent>
         <CardFooter className="text-xs text-gray-500">

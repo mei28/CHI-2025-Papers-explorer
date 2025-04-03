@@ -6,7 +6,7 @@ import { VisualizationPage } from "./pages/VisualizationPage";
 
 const App: React.FC = () => {
   return (
-    <Router>
+    <Router basename='/CHI-2025-Papers-explorer'>
       <div style={{ padding: "20px" }}>
         <nav style={{ marginBottom: "20px" }}>
           <Link to="/search" style={{ marginRight: "20px" }}>
