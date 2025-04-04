@@ -34,7 +34,7 @@ export interface Paper {
 }
 
 const truncateText = (text: string, maxLen: number): string =>
-  (text && text.length > maxLen) ? text.slice(0, maxLen).trim() + "..." : text;
+  text && text.length > maxLen ? text.slice(0, maxLen).trim() + "..." : text;
 
 interface PaperCardProps {
   paper: Paper;
@@ -42,7 +42,11 @@ interface PaperCardProps {
   onMouseLeave?: () => void;
 }
 
-export const PaperCard: React.FC<PaperCardProps> = ({ paper, onMouseEnter, onMouseLeave }) => {
+export const PaperCard: React.FC<PaperCardProps> = ({
+  paper,
+  onMouseEnter,
+  onMouseLeave,
+}) => {
   const { title, abstract = "", url, score, authors, sessions } = paper;
   const truncatedAbstract = truncateText(abstract, 250);
 
@@ -64,29 +68,33 @@ export const PaperCard: React.FC<PaperCardProps> = ({ paper, onMouseEnter, onMou
     sessionInfo = `${s.session_name || "N/A"}\n${s.session_date || "N/A"}\n${s.session_venue || "N/A"}`;
   }
 
-  const extraInfo = sessionInfo; // ここで details などを追加する場合は、適宜連結してください
+  const extraInfo = sessionInfo;
 
   return (
     <a
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="block"
+      className="block hover:shadow-lg transition-shadow"
       onMouseEnter={() => onMouseEnter && onMouseEnter(paper)}
       onMouseLeave={() => onMouseLeave && onMouseLeave()}
     >
-      <Card className="w-full h-full">
+      <Card className="w-full h-full bg-card rounded-lg shadow-card">
         <CardHeader>
-          <CardTitle className="text-lg font-bold">{title}</CardTitle>
+          <CardTitle className="text-lg font-bold text-primary">
+            {title}
+          </CardTitle>
         </CardHeader>
         <CardContent className="flex-1 space-y-2">
-          <div className="text-xs text-gray-500">Author: {authorDisplay}</div>
-          <div className="text-sm text-gray-700">{truncatedAbstract}</div>
-          <div className="text-xs text-gray-500 whitespace-pre-wrap">
+          <div className="text-xs text-muted-foreground">
+            Author: {authorDisplay}
+          </div>
+          <div className="text-sm text-foreground">{truncatedAbstract}</div>
+          <div className="text-xs text-muted whitespace-pre-wrap">
             {truncateText(extraInfo, 150)}
           </div>
         </CardContent>
-        <CardFooter className="text-xs text-gray-500">
+        <CardFooter className="text-xs text-muted-foreground">
           Score: {score.toFixed(3)}
         </CardFooter>
       </Card>

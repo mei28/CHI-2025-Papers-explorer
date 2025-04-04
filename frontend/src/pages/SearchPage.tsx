@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import { CardGrid } from "../components/CardGrid";
 import { searchPapers } from "../utils/apiClient";
 import { Paper } from "../components/PaperCard";
-
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { inputClass, buttonClass } from "@/theme/components";
 
 export const SearchPage: React.FC = () => {
   const [query, setQuery] = useState<string>("");
@@ -32,14 +32,14 @@ export const SearchPage: React.FC = () => {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-background text-foreground min-h-screen">
       <h1 className="text-3xl font-bold mb-6">Search Papers</h1>
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
         <Input
           placeholder="Enter search query..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="flex-1"
+          className={inputClass}
         />
         <Input
           type="number"
@@ -52,7 +52,7 @@ export const SearchPage: React.FC = () => {
           }}
           className="w-24"
         />
-        <Button onClick={handleSearch} className="px-6">
+        <Button onClick={handleSearch} className={buttonClass}>
           Search
         </Button>
       </div>

@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import Plot from "react-plotly.js";
 import { getUmapCoordinates, searchPapers } from "../utils/apiClient";
 import { Paper } from "../components/PaperCard";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { inputClass, buttonClass } from "@/theme/components";
 
 interface UmapData {
   [id: string]: [number, number];
@@ -29,12 +32,10 @@ export const VisualizationPage: React.FC = () => {
     fetchUmap();
   }, []);
 
-  // 検索クエリに基づく論文検索
   const handleSearch = async () => {
     setLoading(true);
     setError("");
     try {
-      // 上位 500 件を取得（必要に応じて調整）
       const results = await searchPapers(query, 1000);
       setPapers(results);
     } catch (err) {
@@ -43,7 +44,6 @@ export const VisualizationPage: React.FC = () => {
     setLoading(false);
   };
 
-  // UMAP 座標と検索結果（papers）をマージして散布図データを作成する
   const createScatterData = () => {
     const ids = Object.keys(umapData);
     const x: number[] = [];
@@ -52,7 +52,6 @@ export const VisualizationPage: React.FC = () => {
     const texts: string[] = [];
     const customData: Paper[] = [];
 
-    // papers を id をキーにしたマッピングにする
     const paperMap: { [id: string]: Paper } = {};
     papers.forEach((p) => {
       paperMap[p.id] = p;
@@ -73,13 +72,9 @@ export const VisualizationPage: React.FC = () => {
   };
 
   const scatterData = createScatterData();
-
-  // 表示する論文は、固定されていれば selectedPaper、なければ hoveredPaper
   const displayPaper = selectedPaper || hoveredPaper;
 
-  // PaperCard で表示していた情報を再現する関数
   const renderPaperDetails = (paper: Paper) => {
-    // 著者情報：第一著者のみ表示、所属があれば "(affiliation)" を付加し、複数なら et al.
     let authorDisplay = "Unknown Author";
     if (paper.authors && paper.authors.length > 0) {
       const first = paper.authors[0];
@@ -92,7 +87,6 @@ export const VisualizationPage: React.FC = () => {
       }
     }
 
-    // details 情報
     let detailsInfo = "Details: N/A";
     if (paper.details) {
       const { content_type, duration, presentation_time } = paper.details;
@@ -102,7 +96,6 @@ export const VisualizationPage: React.FC = () => {
       }
     }
 
-    // セッション情報（最初のセッションのみ）
     let sessionInfo = "";
     if (paper.sessions && paper.sessions.length > 0) {
       const s = paper.sessions[0];
@@ -116,12 +109,14 @@ export const VisualizationPage: React.FC = () => {
         <p className="text-xs text-gray-500 mb-1">Author: {authorDisplay}</p>
         <p className="text-xs text-gray-500 whitespace-pre-wrap mb-1">{detailsInfo}</p>
         {sessionInfo && (
-          <p className="text-xs text-gray-500 whitespace-pre-wrap mb-1">Session Info: {sessionInfo}</p>
+          <p className="text-xs text-gray-500 whitespace-pre-wrap mb-1">
+            Session Info: {sessionInfo}
+          </p>
         )}
         <p className="text-xs text-gray-500 mb-2">Score: {paper.score.toFixed(3)}</p>
         <button
           onClick={() => window.open(paper.url, "_blank")}
-          className="mt-2 px-4 py-2 bg-blue-500 text-white rounded"
+          className={buttonClass}
         >
           Open Paper
         </button>
@@ -130,19 +125,22 @@ export const VisualizationPage: React.FC = () => {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-background text-foreground min-h-screen">
       <h1 className="text-3xl font-bold mb-4">UMAP Visualization</h1>
       <div className="mb-4 flex gap-4">
-        <input
+        <Input
           type="text"
           placeholder="Enter search query..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="border p-2 rounded-md flex-1"
+          className={inputClass}
         />
-        <button onClick={handleSearch} className="px-6 bg-blue-500 text-white p-2 rounded-md">
+        <Button
+          onClick={handleSearch}
+          className={buttonClass}
+        >
           Search
-        </button>
+        </Button>
       </div>
       {loading && <p>Loading search results...</p>}
       {error && <p className="text-red-500">{error}</p>}
@@ -190,7 +188,7 @@ export const VisualizationPage: React.FC = () => {
           {selectedPaper && (
             <button
               onClick={() => setSelectedPaper(null)}
-              className="mt-2 px-4 py-2 bg-gray-200 rounded"
+              className={buttonClass}
             >
               Clear Selection
             </button>

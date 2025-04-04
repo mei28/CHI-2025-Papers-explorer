@@ -3,7 +3,7 @@ import { PaperCard, Paper } from "./PaperCard";
 
 interface CardGridProps {
   papers: Paper[];
-  onPaperHover?: (paper: Paper | null) => void; // 追加: ホバー時のコールバック
+  onPaperHover?: (paper: Paper | null) => void;
 }
 
 export const CardGrid: React.FC<CardGridProps> = ({ papers, onPaperHover }) => {
