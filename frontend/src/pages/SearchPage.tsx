@@ -5,18 +5,17 @@ import { Paper } from "../components/PaperCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { inputClass, buttonClass } from "@/theme/components";
+import { PageContainer } from "../components/PageContainer";
 
 export const SearchPage: React.FC = () => {
-  const [query, setQuery] = useState<string>("");
+  const [query, setQuery] = useState("");
   const [topN, setTopN] = useState<number>(10);
   const [papers, setPapers] = useState<Paper[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  // 初回ロード時にランダムな論文を表示
   useEffect(() => {
     handleSearch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSearch = async () => {
@@ -32,7 +31,7 @@ export const SearchPage: React.FC = () => {
   };
 
   return (
-    <div className="p-6 bg-background text-foreground min-h-screen">
+    <PageContainer>
       <h1 className="text-3xl font-bold mb-6">Search Papers</h1>
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
         <Input
@@ -59,7 +58,9 @@ export const SearchPage: React.FC = () => {
       {loading && <p>Loading...</p>}
       {error && <p className="text-red-500">{error}</p>}
       {papers.length > 0 && <CardGrid papers={papers} />}
-    </div>
+    </PageContainer>
   );
 };
+
+export default SearchPage;
 
