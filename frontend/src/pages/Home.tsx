@@ -5,6 +5,7 @@ import { CardGrid } from "../components/CardGrid";
 import { PaperDetailPanel } from "../components/PaperDetailPanel";
 import { searchPapers, getUmapCoordinates } from "../utils/apiClient";
 import { Paper } from "../components/PaperCard";
+import { PageContainer } from "../components/PageContainer";
 
 interface UmapData {
   [id: string]: [number, number];
@@ -110,6 +111,8 @@ export const HomePage: React.FC = () => {
   const displayPaper = selectedPaper || hoveredPaper;
 
   return (
+
+    <PageContainer>
     <div className="p-6 bg-background text-foreground min-h-screen">
       <h1 className="text-3xl font-bold mb-6">CHI 2025 Papers Explorer</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -148,6 +151,7 @@ export const HomePage: React.FC = () => {
         </div>
       </div>
     </div>
+    </PageContainer>
   );
 };
 
