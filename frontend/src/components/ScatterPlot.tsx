@@ -8,6 +8,7 @@ interface ScatterPlotProps {
   colors: number[];
   texts: string[];
   customData: Paper[];
+  sizes: number[];
   onHover: (paper: Paper | null) => void;
   onClick: (paper: Paper) => void;
 }
@@ -18,6 +19,7 @@ export const ScatterPlot: React.FC<ScatterPlotProps> = ({
   colors,
   texts,
   customData,
+  sizes,
   onHover,
   onClick,
 }) => {
@@ -33,7 +35,7 @@ export const ScatterPlot: React.FC<ScatterPlotProps> = ({
           customdata: customData,
           hovertemplate: "%{text}<extra></extra>",
           marker: {
-            size: 12,
+            size: sizes,
             color: colors,
             colorscale: "Viridis",
             colorbar: { title: "Score" },

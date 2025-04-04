@@ -62,12 +62,31 @@ export const HomePage: React.FC = () => {
     const colors: number[] = [];
     const texts: string[] = [];
     const customData: Paper[] = [];
+    const sizes: number[] = [];
 
-    // scatterPapers を id をキーにしたマッピングにする
     const paperMap: { [id: string]: Paper } = {};
     scatterPapers.forEach((p) => {
       paperMap[p.id] = p;
     });
+
+    // 全体の score の最小値と最大値を計算（存在しない場合は score = 0 とする）
+    let minScore = Infinity;
+    let maxScore = -Infinity;
+    ids.forEach((idStr) => {
+      const paper = paperMap[idStr] || null;
+      const score = paper ? paper.score : 0;
+      if (score < minScore) minScore = score;
+      if (score > maxScore) maxScore = score;
+    });
+
+    // もし全ての score が同じなら、正規化ができないのでダミーのレンジを設定
+    if (maxScore === minScore) {
+      minScore = 0;
+      maxScore = 1;
+    }
+
+    const minSize = 2;
+    const maxSize = 20;
 
     ids.forEach((idStr) => {
       const [xVal, yVal] = umapData[idStr];
@@ -78,9 +97,13 @@ export const HomePage: React.FC = () => {
       colors.push(score);
       texts.push(`Paper ID: ${idStr}\nScore: ${paper ? score.toFixed(3) : "N/A"}`);
       customData.push(paper);
+
+      const normalized = (score - minScore) / (maxScore - minScore);
+      const size = Math.round(minSize + normalized * (maxSize - minSize));
+      sizes.push(size);
     });
 
-    return { x, y, colors, texts, customData };
+    return { x, y, colors, texts, customData, sizes };
   };
 
   const scatterData = createScatterData();
@@ -110,6 +133,7 @@ export const HomePage: React.FC = () => {
               customData={scatterData.customData}
               onHover={(paper) => !selectedPaper && setHoveredPaper(paper)}
               onClick={(paper) => setSelectedPaper(paper)}
+              sizes={scatterData.sizes}
             />
           </div>
           {displayPaper && (
