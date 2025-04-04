@@ -36,7 +36,7 @@ export const VisualizationPage: React.FC = () => {
     setLoading(true);
     setError("");
     try {
-      const results = await searchPapers(query, 1000);
+      const results = await searchPapers(query, 2000);
       setPapers(results);
     } catch (err) {
       setError("Search failed. Please try again.");

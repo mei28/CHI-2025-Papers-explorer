@@ -90,7 +90,7 @@ export const PaperCard: React.FC<PaperCardProps> = ({
             Author: {authorDisplay}
           </div>
           <div className="text-sm text-foreground">{truncatedAbstract}</div>
-          <div className="text-xs text-muted whitespace-pre-wrap">
+          <div className="text-xs text-muted-foreground whitespace-pre-wrap">
             {truncateText(extraInfo, 150)}
           </div>
         </CardContent>
