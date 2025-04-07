@@ -1,0 +1,56 @@
+import React from "react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
+  Select,
+  SelectContent,
+  SelectTrigger,
+  SelectValue,
+  SelectItem,
+} from "@/components/ui/select";
+import { buttonClass } from "@/theme/components";
+import { Sliders } from "lucide-react";
+
+export type DimReductionMethod = "umap" | "pca" | "tsne";
+
+interface OptionsPanelProps {
+  selectedMethod: DimReductionMethod;
+  onMethodChange: (method: DimReductionMethod) => void;
+}
+
+export const OptionsPanel: React.FC<OptionsPanelProps> = ({
+  selectedMethod,
+  onMethodChange,
+}) => {
+  return (
+    <Collapsible className="my-4">
+      <CollapsibleTrigger
+        className={`${buttonClass} mb-2 flex items-center gap-2 cursor-pointer hover:bg-gray-200 transition-colors duration-200 rounded-sm`}
+      >
+        <Sliders className="w-5 h-5" />
+        <span>Search & Visualization Options</span>
+      </CollapsibleTrigger>
+      <CollapsibleContent className="p-4 border rounded-sm">
+        <h2 className="text-lg font-bold mb-2">Visualization Options</h2>
+        <p className="mb-2 text-sm">
+          Dimensionality Reduction: Select a dimensionality reduction method to change the scatter plot view.
+        </p>
+        <Select value={selectedMethod} onValueChange={onMethodChange}>
+          <SelectTrigger className="w-full rounded-md">
+            <SelectValue placeholder="Select a method" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="umap">UMAP</SelectItem>
+            <SelectItem value="pca">PCA</SelectItem>
+            <SelectItem value="tsne">t‑SNE</SelectItem>
+          </SelectContent>
+        </Select>
+        {/* 他のフィルタオプションもここに追加可能 */}
+      </CollapsibleContent>
+    </Collapsible>
+  );
+};
+

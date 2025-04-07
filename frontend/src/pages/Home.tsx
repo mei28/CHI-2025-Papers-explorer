@@ -6,14 +6,14 @@ import { PaperDetailPanel } from "../components/PaperDetailPanel";
 import { searchPapers, getDimensionCoordinates } from "../utils/apiClient";
 import { Paper } from "../components/PaperCard";
 import { PageContainer } from "../components/PageContainer";
-import { SearchOptionsSidebar, DimReductionMethod } from "../components/SearchOptionsSidebar";
+import { OptionsPanel, DimReductionMethod } from "../components/OptionsPanel";
 
-interface UmapData {
+interface CoordData {
   [id: string]: [number, number];
 }
 
 export const HomePage: React.FC = () => {
-  const [umapData, setUmapData] = useState<UmapData>({});
+  const [coordData, setCoordData] = useState<CoordData>({});
   const [cardPapers, setCardPapers] = useState<Paper[]>([]);
   const [scatterPapers, setScatterPapers] = useState<Paper[]>([]);
   const [query, setQuery] = useState<string>("");
@@ -24,14 +24,12 @@ export const HomePage: React.FC = () => {
   const [error, setError] = useState<string>("");
   const [dimMethod, setDimMethod] = useState<DimReductionMethod>("umap");
 
-
-  // 座標をロード
+  // 座標データをロード（次元削減手法に応じて）
   useEffect(() => {
     const fetchCoords = async () => {
       try {
-        // getDimensionCoordinates は手法に応じた座標データを返すように実装しておく
         const data = await getDimensionCoordinates(dimMethod);
-        setUmapData(data);
+        setCoordData(data);
       } catch (err) {
         setError("Failed to load coordinates.");
       }
@@ -50,7 +48,7 @@ export const HomePage: React.FC = () => {
     try {
       // CardGrid 用：topN 件
       const cardResults = await searchPapers(query, topN);
-      // ScatterPlot 用：2000 件程度
+      // ScatterPlot 用：例として 2000 件（必要に応じて調整）
       const scatterResults = await searchPapers(query, 2000);
       setCardPapers(cardResults);
       setScatterPapers(scatterResults);
@@ -60,8 +58,9 @@ export const HomePage: React.FC = () => {
     setLoading(false);
   };
 
+  // 散布図用データ作成（正規化によるサイズも含む）
   const createScatterData = () => {
-    const ids = Object.keys(umapData);
+    const ids = Object.keys(coordData);
     const x: number[] = [];
     const y: number[] = [];
     const colors: number[] = [];
@@ -74,7 +73,7 @@ export const HomePage: React.FC = () => {
       paperMap[p.id] = p;
     });
 
-    // 全体の score の最小値と最大値を計算（存在しない場合は score = 0 とする）
+    // 全体の score の最小・最大を計算
     let minScore = Infinity;
     let maxScore = -Infinity;
     ids.forEach((idStr) => {
@@ -83,8 +82,6 @@ export const HomePage: React.FC = () => {
       if (score < minScore) minScore = score;
       if (score > maxScore) maxScore = score;
     });
-
-    // もし全ての score が同じなら、正規化ができないのでダミーのレンジを設定
     if (maxScore === minScore) {
       minScore = 0;
       maxScore = 1;
@@ -92,9 +89,10 @@ export const HomePage: React.FC = () => {
 
     const minSize = 2;
     const maxSize = 20;
+    const sizeRange = maxSize - minSize;
 
     ids.forEach((idStr) => {
-      const [xVal, yVal] = umapData[idStr];
+      const [xVal, yVal] = coordData[idStr];
       x.push(xVal);
       y.push(yVal);
       const paper = paperMap[idStr] || null;
@@ -102,11 +100,14 @@ export const HomePage: React.FC = () => {
       colors.push(score);
       texts.push(`Paper ID: ${idStr}\nScore: ${paper ? score.toFixed(3) : "N/A"}`);
       customData.push(paper);
-
       const normalized = (score - minScore) / (maxScore - minScore);
-      const size = Math.round(minSize + normalized * (maxSize - minSize));
-      sizes.push(size);
+      sizes.push(Math.round(minSize + normalized * sizeRange));
     });
+
+    // すべてのサイズが同じ場合は、全て 4 に設定
+    if (sizes.every((s) => s === sizes[0])) {
+      sizes.fill(8);
+    }
 
     return { x, y, colors, texts, customData, sizes };
   };
@@ -116,18 +117,12 @@ export const HomePage: React.FC = () => {
 
   return (
     <PageContainer>
-      <div className="flex">
-        {/* サイドバーエリア */}
-        <div className="w-64 border-r">
-          <SearchOptionsSidebar
-            selectedMethod={dimMethod}
-            onMethodChange={setDimMethod}
-          />
-        </div>
-        <div className="p-6 bg-background text-foreground min-h-screen flex-1">
+      <div className="flex min-h-screen">
+        {/* 右側: メインコンテンツ */}
+        <div className="p-6 flex-1 bg-background text-foreground">
           <h1 className="text-3xl font-bold mb-6">CHI 2025 Papers Explorer</h1>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* 左半分: 検索バー & 散布図 */}
+            {/* 左側: 検索バー、散布図、詳細表示 */}
             <div>
               <SearchBar
                 query={query}
@@ -138,6 +133,9 @@ export const HomePage: React.FC = () => {
               />
               {loading && <p>Loading search results...</p>}
               {error && <p className="text-red-500">{error}</p>}
+
+              <OptionsPanel selectedMethod={dimMethod} onMethodChange={setDimMethod} />
+
               <div className="border rounded p-4 bg-white">
                 <ScatterPlot
                   x={scatterData.x}
@@ -152,14 +150,11 @@ export const HomePage: React.FC = () => {
               </div>
               {displayPaper && (
                 <div className="mt-4">
-                  <PaperDetailPanel
-                    paper={displayPaper}
-                    onClear={() => setSelectedPaper(null)}
-                  />
+                  <PaperDetailPanel paper={displayPaper} onClear={() => setSelectedPaper(null)} />
                 </div>
               )}
             </div>
-            {/* 右半分: 論文カードグリッド */}
+            {/* 右側: 論文カードグリッド */}
             <div>
               <CardGrid papers={cardPapers} />
             </div>
@@ -171,3 +166,4 @@ export const HomePage: React.FC = () => {
 };
 
 export default HomePage;
+
