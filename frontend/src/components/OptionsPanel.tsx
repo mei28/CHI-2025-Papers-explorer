@@ -11,19 +11,25 @@ import {
   SelectValue,
   SelectItem,
 } from "@/components/ui/select";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { buttonClass } from "@/theme/components";
 import { Sliders } from "lucide-react";
+import { DateRange } from "react-day-picker";
 
 export type DimReductionMethod = "umap" | "pca" | "tsne";
 
 interface OptionsPanelProps {
   selectedMethod: DimReductionMethod;
   onMethodChange: (method: DimReductionMethod) => void;
+  dateRange: DateRange | undefined;
+  onDateRangeChange: (range: DateRange | undefined) => void;
 }
 
 export const OptionsPanel: React.FC<OptionsPanelProps> = ({
   selectedMethod,
   onMethodChange,
+  dateRange,
+  onDateRangeChange,
 }) => {
   return (
     <Collapsible className="my-4">
@@ -36,7 +42,7 @@ export const OptionsPanel: React.FC<OptionsPanelProps> = ({
       <CollapsibleContent className="p-4 border rounded-sm">
         <h2 className="text-lg font-bold mb-2">Visualization Options</h2>
         <p className="mb-2 text-sm">
-          Dimensionality Reduction: Select a dimensionality reduction method to change the scatter plot view.
+          Dimensionality Reduction: Select a method to change the scatter plot view.
         </p>
         <Select value={selectedMethod} onValueChange={onMethodChange}>
           <SelectTrigger className="w-full rounded-md">
@@ -48,6 +54,14 @@ export const OptionsPanel: React.FC<OptionsPanelProps> = ({
             <SelectItem value="tsne">t‑SNE</SelectItem>
           </SelectContent>
         </Select>
+        {/* 日付フィルタリングオプション */}
+        <div className="mt-4">
+          <p className="mb-2 text-sm">Filter by Date Range:</p>
+          <DatePickerWithRange
+            initialDateFrom={new Date(2025, 3, 26)} // 4月26日（JavaScriptの月は0起算）
+            initialDateTo={new Date(2025, 4, 1)}   // 5月1日
+          />
+        </div>
         {/* 他のフィルタオプションもここに追加可能 */}
       </CollapsibleContent>
     </Collapsible>
