@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { parse } from "date-fns";
 import { SearchBar } from "../components/SearchBar";
 import { ScatterPlot } from "../components/ScatterPlot";
 import { CardGrid } from "../components/CardGrid";

@@ -8,7 +8,7 @@ import { inputClass, buttonClass } from "@/theme/components";
 import { PageContainer } from "../components/PageContainer";
 import { filterPapersByDate } from "@/utils/filterByDate";
 import { DateRange } from "react-day-picker";
-import { OptionsPanel, DimReductionMethod } from "../components/OptionsPanel";
+import { OptionsPanel } from "../components/OptionsPanel";
 
 export const SearchPage: React.FC = () => {
   const [query, setQuery] = useState("");
@@ -64,8 +64,8 @@ export const SearchPage: React.FC = () => {
       </div>
 
       <OptionsPanel
-        // selectedMethod={dimMethod}
-        // onMethodChange={setDimMethod}
+        selectedMethod={'umap'}
+        onMethodChange={() => { }}
         dateRange={dateRange}
         onDateRangeChange={setDateRange}
       />
