@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getUmapCoordinates, searchPapers } from "../utils/apiClient";
+import { getDimensionCoordinates, searchPapers } from "../utils/apiClient";
 import { Paper } from "../components/PaperCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -7,31 +7,33 @@ import { inputClass, buttonClass } from "@/theme/components";
 import { PageContainer } from "../components/PageContainer";
 import { ScatterPlot } from "../components/ScatterPlot";
 import { PaperDetailPanel } from "../components/PaperDetailPanel";
+import { OptionsPanel, DimReductionMethod } from "../components/OptionsPanel";
 
-interface UmapData {
+interface CoordData {
   [id: string]: [number, number];
 }
 
 export const VisualizationPage: React.FC = () => {
-  const [umapData, setUmapData] = useState<UmapData>({});
+  const [coordData, setCoordData] = useState<CoordData>({});
   const [papers, setPapers] = useState<Paper[]>([]);
   const [query, setQuery] = useState<string>("");
   const [hoveredPaper, setHoveredPaper] = useState<Paper | null>(null);
   const [selectedPaper, setSelectedPaper] = useState<Paper | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+  const [dimMethod, setDimMethod] = useState<DimReductionMethod>("umap");
 
   useEffect(() => {
-    const fetchUmap = async () => {
+    const fetchCoords = async () => {
       try {
-        const data = await getUmapCoordinates();
-        setUmapData(data);
+        const data = await getDimensionCoordinates(dimMethod);
+        setCoordData(data);
       } catch (err) {
-        setError("Failed to load UMAP data.");
+        setError("Failed to load coordinates.");
       }
     };
-    fetchUmap();
-  }, []);
+    fetchCoords();
+  }, [dimMethod]);
 
   const handleSearch = async () => {
     setLoading(true);
@@ -47,7 +49,7 @@ export const VisualizationPage: React.FC = () => {
   };
 
   const createScatterData = () => {
-    const ids = Object.keys(umapData);
+    const ids = Object.keys(coordData);
     const x: number[] = [];
     const y: number[] = [];
     const colors: number[] = [];
@@ -78,7 +80,7 @@ export const VisualizationPage: React.FC = () => {
     const sizeFactor = maxSize - minSize;
 
     ids.forEach((idStr) => {
-      const [xVal, yVal] = umapData[idStr];
+      const [xVal, yVal] = coordData[idStr];
       x.push(xVal);
       y.push(yVal);
       const paper = paperMap[idStr] || null;
@@ -90,6 +92,10 @@ export const VisualizationPage: React.FC = () => {
       sizes.push(Math.round(minSize + normalized * sizeFactor));
     });
 
+    if (sizes.every((s) => s === sizes[0])) {
+      sizes.fill(8);
+    }
+
     return { x, y, colors, texts, customData, sizes };
   };
 
@@ -98,7 +104,7 @@ export const VisualizationPage: React.FC = () => {
 
   return (
     <PageContainer>
-      <h1 className="text-3xl font-bold mb-4">UMAP Visualization</h1>
+      <h1 className="text-3xl font-bold mb-4">Visualization</h1>
       <div className="mb-4 flex gap-4">
         <Input
           type="text"
@@ -113,6 +119,9 @@ export const VisualizationPage: React.FC = () => {
       </div>
       {loading && <p>Loading search results...</p>}
       {error && <p className="text-red-500">{error}</p>}
+
+      <OptionsPanel selectedMethod={dimMethod} onMethodChange={setDimMethod} />
+
       <div className="mb-6 border rounded p-4 bg-white">
         <ScatterPlot
           x={scatterData.x}
