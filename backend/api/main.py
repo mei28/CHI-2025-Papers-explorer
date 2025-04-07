@@ -31,7 +31,8 @@ app.add_middleware(
 DATA_PATH = Path("data/scraped_data_0314.json")
 EMBEDDINGS_PATH = Path("data/embeddings.json")
 UMAP_PATH = Path("data/umap_coordinates.json")
-
+PCA_PATH = Path("data/pca_coordinates.json")
+TSNE_PATH = Path("data/tsne_coordinates.json")
 # グローバル変数
 papers: List[Dict] = []
 search_engine: Optional[Union[TfidfSearch, EmbeddingSearch]] = None
@@ -40,7 +41,6 @@ search_engine: Optional[Union[TfidfSearch, EmbeddingSearch]] = None
 def load_data():
     """
     可能であれば、埋め込み付きのデータ (embeddings.json) を優先して読み込み、
-    存在しなければ scraped_data_0314.json を読み込みます。
     """
     global papers
     if EMBEDDINGS_PATH.exists():
@@ -125,6 +125,24 @@ def search(
     else:
         results = search_engine.search(query, top_n=top_n)
         return results
+
+def load_coordinates(path: Path) -> Dict[str, List[float]]:
+    if path.exists():
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
+@app.get("/dimensions", response_model=Dict[str, List[float]])
+def get_dimensions(method: str = Query("umap", description="次元削減手法: umap, pca, tsne")):
+    if method == "umap":
+        coords = load_coordinates(UMAP_PATH)
+    elif method == "pca":
+        coords = load_coordinates(PCA_PATH)
+    elif method == "tsne":
+        coords = load_coordinates(TSNE_PATH)
+    else:
+        raise HTTPException(status_code=400, detail="Invalid method")
+    return coords
 
 
 @app.get("/umap", response_model=Dict[str, List[float]])

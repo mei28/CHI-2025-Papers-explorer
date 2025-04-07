@@ -32,4 +32,17 @@ export const getUmapCoordinates = async () => {
   }
 };
 
+export const getDimensionCoordinates = async (method: string = "umap") => {
+  try {
+    const response = await apiClient.get(`/dimensions`, {
+      params: { method }
+    });
+    console.log("Response from /dimensions:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching dimension coordinates:", error);
+    throw error;
+  }
+};
+
 export default apiClient;

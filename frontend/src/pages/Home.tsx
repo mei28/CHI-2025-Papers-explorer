@@ -3,9 +3,10 @@ import { SearchBar } from "../components/SearchBar";
 import { ScatterPlot } from "../components/ScatterPlot";
 import { CardGrid } from "../components/CardGrid";
 import { PaperDetailPanel } from "../components/PaperDetailPanel";
-import { searchPapers, getUmapCoordinates } from "../utils/apiClient";
+import { searchPapers, getDimensionCoordinates } from "../utils/apiClient";
 import { Paper } from "../components/PaperCard";
 import { PageContainer } from "../components/PageContainer";
+import { SearchOptionsSidebar, DimReductionMethod } from "../components/SearchOptionsSidebar";
 
 interface UmapData {
   [id: string]: [number, number];
@@ -21,19 +22,22 @@ export const HomePage: React.FC = () => {
   const [selectedPaper, setSelectedPaper] = useState<Paper | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+  const [dimMethod, setDimMethod] = useState<DimReductionMethod>("umap");
 
-  // UMAP 座標をロード
+
+  // 座標をロード
   useEffect(() => {
-    const fetchUmap = async () => {
+    const fetchCoords = async () => {
       try {
-        const data = await getUmapCoordinates();
+        // getDimensionCoordinates は手法に応じた座標データを返すように実装しておく
+        const data = await getDimensionCoordinates(dimMethod);
         setUmapData(data);
       } catch (err) {
-        setError("Failed to load UMAP data.");
+        setError("Failed to load coordinates.");
       }
     };
-    fetchUmap();
-  }, []);
+    fetchCoords();
+  }, [dimMethod]);
 
   // 初回ロード時ランダム表示
   useEffect(() => {
@@ -111,49 +115,59 @@ export const HomePage: React.FC = () => {
   const displayPaper = selectedPaper || hoveredPaper;
 
   return (
-
     <PageContainer>
-    <div className="p-6 bg-background text-foreground min-h-screen">
-      <h1 className="text-3xl font-bold mb-6">CHI 2025 Papers Explorer</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* 左半分: 検索バー & 散布図 */}
-        <div>
-          <SearchBar
-            query={query}
-            topN={topN}
-            onQueryChange={setQuery}
-            onTopNChange={setTopN}
-            onSearch={handleSearch}
+      <div className="flex">
+        {/* サイドバーエリア */}
+        <div className="w-64 border-r">
+          <SearchOptionsSidebar
+            selectedMethod={dimMethod}
+            onMethodChange={setDimMethod}
           />
-          {loading && <p>Loading search results...</p>}
-          {error && <p className="text-red-500">{error}</p>}
-          <div className="border rounded p-4 bg-white">
-            <ScatterPlot
-              x={scatterData.x}
-              y={scatterData.y}
-              colors={scatterData.colors}
-              texts={scatterData.texts}
-              customData={scatterData.customData}
-              onHover={(paper) => !selectedPaper && setHoveredPaper(paper)}
-              onClick={(paper) => setSelectedPaper(paper)}
-              sizes={scatterData.sizes}
-            />
-          </div>
-          {displayPaper && (
-            <div className="mt-4">
-              <PaperDetailPanel paper={displayPaper} onClear={() => setSelectedPaper(null)} />
-            </div>
-          )}
         </div>
-        {/* 右半分: 論文カードグリッド */}
-        <div>
-          <CardGrid papers={cardPapers} />
+        <div className="p-6 bg-background text-foreground min-h-screen flex-1">
+          <h1 className="text-3xl font-bold mb-6">CHI 2025 Papers Explorer</h1>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* 左半分: 検索バー & 散布図 */}
+            <div>
+              <SearchBar
+                query={query}
+                topN={topN}
+                onQueryChange={setQuery}
+                onTopNChange={setTopN}
+                onSearch={handleSearch}
+              />
+              {loading && <p>Loading search results...</p>}
+              {error && <p className="text-red-500">{error}</p>}
+              <div className="border rounded p-4 bg-white">
+                <ScatterPlot
+                  x={scatterData.x}
+                  y={scatterData.y}
+                  colors={scatterData.colors}
+                  texts={scatterData.texts}
+                  customData={scatterData.customData}
+                  sizes={scatterData.sizes}
+                  onHover={(paper) => !selectedPaper && setHoveredPaper(paper)}
+                  onClick={(paper) => setSelectedPaper(paper)}
+                />
+              </div>
+              {displayPaper && (
+                <div className="mt-4">
+                  <PaperDetailPanel
+                    paper={displayPaper}
+                    onClear={() => setSelectedPaper(null)}
+                  />
+                </div>
+              )}
+            </div>
+            {/* 右半分: 論文カードグリッド */}
+            <div>
+              <CardGrid papers={cardPapers} />
+            </div>
+          </div>
         </div>
       </div>
-    </div>
     </PageContainer>
   );
 };
 
 export default HomePage;
-
