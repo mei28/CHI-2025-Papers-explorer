@@ -6,6 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { inputClass, buttonClass } from "@/theme/components";
 import { PageContainer } from "../components/PageContainer";
+import { filterPapersByDate } from "@/utils/filterByDate";
+import { DateRange } from "react-day-picker";
+import { OptionsPanel, DimReductionMethod } from "../components/OptionsPanel";
 
 export const SearchPage: React.FC = () => {
   const [query, setQuery] = useState("");
@@ -13,6 +16,10 @@ export const SearchPage: React.FC = () => {
   const [papers, setPapers] = useState<Paper[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: new Date(2025, 3, 26),
+    to: new Date(2025, 4, 1),
+  });
 
   useEffect(() => {
     handleSearch();
@@ -22,8 +29,8 @@ export const SearchPage: React.FC = () => {
     setLoading(true);
     setError("");
     try {
-      const data = await searchPapers(query, topN);
-      setPapers(data);
+      const data = await searchPapers(query, 2000);
+      setPapers(filterPapersByDate(data, dateRange).slice(0, topN));
     } catch (err) {
       setError("Search failed. Please try again.");
     }
@@ -55,6 +62,13 @@ export const SearchPage: React.FC = () => {
           Search
         </Button>
       </div>
+
+      <OptionsPanel
+        // selectedMethod={dimMethod}
+        // onMethodChange={setDimMethod}
+        dateRange={dateRange}
+        onDateRangeChange={setDateRange}
+      />
       {loading && <p>Loading...</p>}
       {error && <p className="text-red-500">{error}</p>}
       {papers.length > 0 && <CardGrid papers={papers} />}

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { buttonClass } from "@/theme/components";
-import { Sliders } from "lucide-react";
+import { Sliders, ChevronsUpDown, ChevronsDownUp } from "lucide-react";
 import { DateRange } from "react-day-picker";
 
 export type DimReductionMethod = "umap" | "pca" | "tsne";
@@ -31,13 +31,20 @@ export const OptionsPanel: React.FC<OptionsPanelProps> = ({
   dateRange,
   onDateRangeChange,
 }) => {
+  const [open, setOpen] = useState(false);
+
   return (
-    <Collapsible className="my-4">
+    <Collapsible open={open} onOpenChange={setOpen} className="my-4">
       <CollapsibleTrigger
         className={`${buttonClass} mb-2 flex items-center gap-2 cursor-pointer hover:bg-gray-200 transition-colors duration-200 rounded-sm`}
       >
         <Sliders className="w-5 h-5" />
         <span>Search & Visualization Options</span>
+        {open ? (
+          <ChevronsDownUp className="w-5 h-5 ml-auto" />
+        ) : (
+          <ChevronsUpDown className="w-5 h-5 ml-auto" />
+        )}
       </CollapsibleTrigger>
       <CollapsibleContent className="p-4 border rounded-sm">
         <h2 className="text-lg font-bold mb-2">Visualization Options</h2>
@@ -63,7 +70,6 @@ export const OptionsPanel: React.FC<OptionsPanelProps> = ({
             onUpdate={({ range }) => onDateRangeChange(range)}
           />
         </div>
-        {/* 今後、他のフィルタオプションもここに追加可能 */}
       </CollapsibleContent>
     </Collapsible>
   );

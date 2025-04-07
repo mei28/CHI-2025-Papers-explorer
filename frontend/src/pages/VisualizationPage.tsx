@@ -8,6 +8,8 @@ import { PageContainer } from "../components/PageContainer";
 import { ScatterPlot } from "../components/ScatterPlot";
 import { PaperDetailPanel } from "../components/PaperDetailPanel";
 import { OptionsPanel, DimReductionMethod } from "../components/OptionsPanel";
+import { DateRange } from "react-day-picker";
+import { filterPapersByDate } from "@/utils/filterByDate";
 
 interface CoordData {
   [id: string]: [number, number];
@@ -22,6 +24,10 @@ export const VisualizationPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [dimMethod, setDimMethod] = useState<DimReductionMethod>("umap");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: new Date(2025, 3, 26),
+    to: new Date(2025, 4, 1),
+  });
 
   useEffect(() => {
     const fetchCoords = async () => {
@@ -41,13 +47,14 @@ export const VisualizationPage: React.FC = () => {
     try {
       // Visualization 用のデータ（例として 2000 件）
       const results = await searchPapers(query, 2000);
-      setPapers(results);
+      setPapers(filterPapersByDate(results, dateRange));
     } catch (err) {
       setError("Search failed. Please try again.");
     }
     setLoading(false);
   };
 
+  // 散布図用データ作成：score が有効な論文のみ対象とし、正規化に基づくサイズも算出
   const createScatterData = () => {
     const ids = Object.keys(coordData);
     const x: number[] = [];
@@ -62,12 +69,17 @@ export const VisualizationPage: React.FC = () => {
       paperMap[p.id] = p;
     });
 
-    // スコアの正規化処理（全体の最小・最大を用いてサイズを算出）
+    // 有効な score を持つ論文だけの id を抽出
+    const validIds = ids.filter((idStr) => {
+      const paper = paperMap[idStr];
+      return paper !== undefined && paper !== null && typeof paper.score === "number" && !isNaN(paper.score);
+    });
+
     let minScore = Infinity;
     let maxScore = -Infinity;
-    ids.forEach((idStr) => {
-      const paper = paperMap[idStr];
-      const score = paper ? paper.score : 0;
+    validIds.forEach((idStr) => {
+      const paper = paperMap[idStr]!;
+      const score = paper.score;
       if (score < minScore) minScore = score;
       if (score > maxScore) maxScore = score;
     });
@@ -77,21 +89,22 @@ export const VisualizationPage: React.FC = () => {
     }
     const minSize = 2;
     const maxSize = 20;
-    const sizeFactor = maxSize - minSize;
+    const sizeRange = maxSize - minSize;
 
-    ids.forEach((idStr) => {
+    validIds.forEach((idStr) => {
       const [xVal, yVal] = coordData[idStr];
       x.push(xVal);
       y.push(yVal);
-      const paper = paperMap[idStr] || null;
-      const score = paper ? paper.score : 0;
+      const paper = paperMap[idStr]!;
+      const score = paper.score;
       colors.push(score);
-      texts.push(`Paper ID: ${idStr}\nScore: ${paper ? score.toFixed(3) : "N/A"}`);
+      texts.push(`Paper ID: ${idStr}\nScore: ${score.toFixed(3)}`);
       customData.push(paper);
       const normalized = (score - minScore) / (maxScore - minScore);
-      sizes.push(Math.round(minSize + normalized * sizeFactor));
+      sizes.push(Math.round(minSize + normalized * sizeRange));
     });
 
+    // もしすべてのサイズが同じなら、全て 8 に設定
     if (sizes.every((s) => s === sizes[0])) {
       sizes.fill(8);
     }
@@ -120,7 +133,13 @@ export const VisualizationPage: React.FC = () => {
       {loading && <p>Loading search results...</p>}
       {error && <p className="text-red-500">{error}</p>}
 
-      <OptionsPanel selectedMethod={dimMethod} onMethodChange={setDimMethod} />
+
+      <OptionsPanel
+        selectedMethod={dimMethod}
+        onMethodChange={setDimMethod}
+        dateRange={dateRange}
+        onDateRangeChange={setDateRange}
+      />
 
       <div className="mb-6 border rounded p-4 bg-white">
         <ScatterPlot

@@ -9,6 +9,7 @@ import { Paper } from "../components/PaperCard";
 import { PageContainer } from "../components/PageContainer";
 import { OptionsPanel, DimReductionMethod } from "../components/OptionsPanel";
 import { DateRange } from "react-day-picker";
+import { filterPapersByDate } from "@/utils/filterByDate";
 
 interface CoordData {
   [id: string]: [number, number];
@@ -25,7 +26,6 @@ export const HomePage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [dimMethod, setDimMethod] = useState<DimReductionMethod>("umap");
-  // デフォルトの日付範囲: 26 April 2025 ～ 1 May 2025
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: new Date(2025, 3, 26),
     to: new Date(2025, 4, 1),
@@ -49,22 +49,6 @@ export const HomePage: React.FC = () => {
     handleSearch();
   }, []);
 
-  // 日付フィルタリング関数：各論文のセッション日付を "Mon, 28 Apr" の部分からパースし、2025年を補完
-  const filterByDate = (papers: Paper[]): Paper[] => {
-    if (!dateRange || !dateRange.from || !dateRange.to) return papers;
-    return papers.filter((paper) => {
-      const sessionDateStr = paper.sessions?.[0]?.session_date;
-      if (!sessionDateStr) return false;
-      // 例: "Mon, 28 Apr | 3:22 PM - 3:34 PM" の場合、最初の "|" の前までを利用
-      const [datePart] = sessionDateStr.split("|");
-      const trimmedDate = datePart.trim();
-      // 年情報がないので " 2025" を補完してパース
-      const parsedDate = parse(trimmedDate + " 2025", "EEE, dd LLL yyyy", new Date());
-      if (isNaN(parsedDate.getTime())) return false;
-      return parsedDate >= dateRange.from && parsedDate <= dateRange.to;
-    });
-  };
-
   // 検索実行：カード用（topN件）および散布図用（例として2000件）の結果を取得し、日付フィルタリングを適用
   const handleSearch = async () => {
     setLoading(true);
@@ -72,8 +56,8 @@ export const HomePage: React.FC = () => {
     try {
       const cardResults = await searchPapers(query, 2000);
       const scatterResults = await searchPapers(query, 2000);
-      setCardPapers(filterByDate(cardResults).slice(0, topN));
-      setScatterPapers(filterByDate(scatterResults));
+      setCardPapers(filterPapersByDate(cardResults, dateRange).slice(0, topN));
+      setScatterPapers(filterPapersByDate(scatterResults, dateRange));
     } catch (err) {
       setError("Search failed. Please try again.");
     }
