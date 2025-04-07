@@ -58,11 +58,12 @@ export const OptionsPanel: React.FC<OptionsPanelProps> = ({
         <div className="mt-4">
           <p className="mb-2 text-sm">Filter by Date Range:</p>
           <DatePickerWithRange
-            initialDateFrom={new Date(2025, 3, 26)} // 4月26日（JavaScriptの月は0起算）
-            initialDateTo={new Date(2025, 4, 1)}   // 5月1日
+            initialDateFrom={dateRange?.from || new Date(2025, 3, 26)}
+            initialDateTo={dateRange?.to || new Date(2025, 4, 1)}
+            onUpdate={({ range }) => onDateRangeChange(range)}
           />
         </div>
-        {/* 他のフィルタオプションもここに追加可能 */}
+        {/* 今後、他のフィルタオプションもここに追加可能 */}
       </CollapsibleContent>
     </Collapsible>
   );

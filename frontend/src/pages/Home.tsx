@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { parse } from "date-fns";
 import { SearchBar } from "../components/SearchBar";
 import { ScatterPlot } from "../components/ScatterPlot";
 import { CardGrid } from "../components/CardGrid";
@@ -7,6 +8,7 @@ import { searchPapers, getDimensionCoordinates } from "../utils/apiClient";
 import { Paper } from "../components/PaperCard";
 import { PageContainer } from "../components/PageContainer";
 import { OptionsPanel, DimReductionMethod } from "../components/OptionsPanel";
+import { DateRange } from "react-day-picker";
 
 interface CoordData {
   [id: string]: [number, number];
@@ -23,8 +25,13 @@ export const HomePage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [dimMethod, setDimMethod] = useState<DimReductionMethod>("umap");
+  // デフォルトの日付範囲: 26 April 2025 ～ 1 May 2025
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: new Date(2025, 3, 26),
+    to: new Date(2025, 4, 1),
+  });
 
-  // 座標データをロード（次元削減手法に応じて）
+  // 次元削減手法に応じた座標データをロード
   useEffect(() => {
     const fetchCoords = async () => {
       try {
@@ -37,28 +44,43 @@ export const HomePage: React.FC = () => {
     fetchCoords();
   }, [dimMethod]);
 
-  // 初回ロード時ランダム表示
+  // 初回ロード時に検索を実行
   useEffect(() => {
     handleSearch();
   }, []);
 
+  // 日付フィルタリング関数：各論文のセッション日付を "Mon, 28 Apr" の部分からパースし、2025年を補完
+  const filterByDate = (papers: Paper[]): Paper[] => {
+    if (!dateRange || !dateRange.from || !dateRange.to) return papers;
+    return papers.filter((paper) => {
+      const sessionDateStr = paper.sessions?.[0]?.session_date;
+      if (!sessionDateStr) return false;
+      // 例: "Mon, 28 Apr | 3:22 PM - 3:34 PM" の場合、最初の "|" の前までを利用
+      const [datePart] = sessionDateStr.split("|");
+      const trimmedDate = datePart.trim();
+      // 年情報がないので " 2025" を補完してパース
+      const parsedDate = parse(trimmedDate + " 2025", "EEE, dd LLL yyyy", new Date());
+      if (isNaN(parsedDate.getTime())) return false;
+      return parsedDate >= dateRange.from && parsedDate <= dateRange.to;
+    });
+  };
+
+  // 検索実行：カード用（topN件）および散布図用（例として2000件）の結果を取得し、日付フィルタリングを適用
   const handleSearch = async () => {
     setLoading(true);
     setError("");
     try {
-      // CardGrid 用：topN 件
-      const cardResults = await searchPapers(query, topN);
-      // ScatterPlot 用：例として 2000 件（必要に応じて調整）
+      const cardResults = await searchPapers(query, 2000);
       const scatterResults = await searchPapers(query, 2000);
-      setCardPapers(cardResults);
-      setScatterPapers(scatterResults);
+      setCardPapers(filterByDate(cardResults).slice(0, topN));
+      setScatterPapers(filterByDate(scatterResults));
     } catch (err) {
       setError("Search failed. Please try again.");
     }
     setLoading(false);
   };
 
-  // 散布図用データ作成（正規化によるサイズも含む）
+  // 散布図用データ作成：score が有効な論文のみ対象とし、正規化に基づくサイズも算出
   const createScatterData = () => {
     const ids = Object.keys(coordData);
     const x: number[] = [];
@@ -73,12 +95,17 @@ export const HomePage: React.FC = () => {
       paperMap[p.id] = p;
     });
 
-    // 全体の score の最小・最大を計算
+    // 有効な score を持つ論文だけの id を抽出
+    const validIds = ids.filter((idStr) => {
+      const paper = paperMap[idStr];
+      return paper !== undefined && paper !== null && typeof paper.score === "number" && !isNaN(paper.score);
+    });
+
     let minScore = Infinity;
     let maxScore = -Infinity;
-    ids.forEach((idStr) => {
-      const paper = paperMap[idStr] || null;
-      const score = paper ? paper.score : 0;
+    validIds.forEach((idStr) => {
+      const paper = paperMap[idStr]!;
+      const score = paper.score;
       if (score < minScore) minScore = score;
       if (score > maxScore) maxScore = score;
     });
@@ -86,25 +113,24 @@ export const HomePage: React.FC = () => {
       minScore = 0;
       maxScore = 1;
     }
-
     const minSize = 2;
     const maxSize = 20;
     const sizeRange = maxSize - minSize;
 
-    ids.forEach((idStr) => {
+    validIds.forEach((idStr) => {
       const [xVal, yVal] = coordData[idStr];
       x.push(xVal);
       y.push(yVal);
-      const paper = paperMap[idStr] || null;
-      const score = paper ? paper.score : 0;
+      const paper = paperMap[idStr]!;
+      const score = paper.score;
       colors.push(score);
-      texts.push(`Paper ID: ${idStr}\nScore: ${paper ? score.toFixed(3) : "N/A"}`);
+      texts.push(`Paper ID: ${idStr}\nScore: ${score.toFixed(3)}`);
       customData.push(paper);
       const normalized = (score - minScore) / (maxScore - minScore);
       sizes.push(Math.round(minSize + normalized * sizeRange));
     });
 
-    // すべてのサイズが同じ場合は、全て 4 に設定
+    // もしすべてのサイズが同じなら、全て 8 に設定
     if (sizes.every((s) => s === sizes[0])) {
       sizes.fill(8);
     }
@@ -118,7 +144,7 @@ export const HomePage: React.FC = () => {
   return (
     <PageContainer>
       <div className="flex min-h-screen">
-        {/* 右側: メインコンテンツ */}
+        {/* メインコンテンツ */}
         <div className="p-6 flex-1 bg-background text-foreground">
           <h1 className="text-3xl font-bold mb-6">CHI 2025 Papers Explorer</h1>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -134,7 +160,12 @@ export const HomePage: React.FC = () => {
               {loading && <p>Loading search results...</p>}
               {error && <p className="text-red-500">{error}</p>}
 
-              <OptionsPanel selectedMethod={dimMethod} onMethodChange={setDimMethod} />
+              <OptionsPanel
+                selectedMethod={dimMethod}
+                onMethodChange={setDimMethod}
+                dateRange={dateRange}
+                onDateRangeChange={setDateRange}
+              />
 
               <div className="border rounded p-4 bg-white">
                 <ScatterPlot
@@ -150,7 +181,10 @@ export const HomePage: React.FC = () => {
               </div>
               {displayPaper && (
                 <div className="mt-4">
-                  <PaperDetailPanel paper={displayPaper} onClear={() => setSelectedPaper(null)} />
+                  <PaperDetailPanel
+                    paper={displayPaper}
+                    onClear={() => setSelectedPaper(null)}
+                  />
                 </div>
               )}
             </div>
