@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { inputClass, buttonClass } from "@/theme/components";
 import { PageContainer } from "../components/PageContainer";
 import { filterPapersByDate } from "@/utils/filterByDate";
+import { filterPapersByContent } from "../utils/filterByContent";
 import { DateRange } from "react-day-picker";
 import { OptionsPanel } from "../components/OptionsPanel";
 
@@ -20,6 +21,7 @@ export const SearchPage: React.FC = () => {
     from: new Date(2025, 3, 26),
     to: new Date(2025, 4, 1),
   });
+  const [selectedContentTypes, setSelectedContentTypes] = useState<string[]>(["Papers"]);
 
   useEffect(() => {
     handleSearch();
@@ -30,7 +32,12 @@ export const SearchPage: React.FC = () => {
     setError("");
     try {
       const data = await searchPapers(query, 2000);
-      setPapers(filterPapersByDate(data, dateRange).slice(0, topN));
+      setPapers(
+        filterPapersByContent(
+          filterPapersByDate(data, dateRange).slice(0, topN),
+          selectedContentTypes
+        )
+      );
     } catch (err) {
       setError("Search failed. Please try again.");
     }
@@ -68,6 +75,8 @@ export const SearchPage: React.FC = () => {
         onMethodChange={() => { }}
         dateRange={dateRange}
         onDateRangeChange={setDateRange}
+        selectedContentTypes={selectedContentTypes}
+        onContentTypesChange={setSelectedContentTypes}
       />
       {loading && <p>Loading...</p>}
       {error && <p className="text-red-500">{error}</p>}

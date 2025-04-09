@@ -10,6 +10,7 @@ import { PaperDetailPanel } from "../components/PaperDetailPanel";
 import { OptionsPanel, DimReductionMethod } from "../components/OptionsPanel";
 import { DateRange } from "react-day-picker";
 import { filterPapersByDate } from "@/utils/filterByDate";
+import { filterPapersByContent } from "../utils/filterByContent";
 
 interface CoordData {
   [id: string]: [number, number];
@@ -28,6 +29,7 @@ export const VisualizationPage: React.FC = () => {
     from: new Date(2025, 3, 26),
     to: new Date(2025, 4, 1),
   });
+  const [selectedContentTypes, setSelectedContentTypes] = useState<string[]>(["Papers"]);
 
   useEffect(() => {
     const fetchCoords = async () => {
@@ -47,7 +49,11 @@ export const VisualizationPage: React.FC = () => {
     try {
       // Visualization 用のデータ（例として 2000 件）
       const results = await searchPapers(query, 2000);
-      setPapers(filterPapersByDate(results, dateRange));
+      setPapers(
+        filterPapersByContent(
+          filterPapersByDate(results, dateRange),
+          selectedContentTypes
+        ));
     } catch (err) {
       setError("Search failed. Please try again.");
     }
@@ -139,6 +145,8 @@ export const VisualizationPage: React.FC = () => {
         onMethodChange={setDimMethod}
         dateRange={dateRange}
         onDateRangeChange={setDateRange}
+        selectedContentTypes={selectedContentTypes}
+        onContentTypesChange={setSelectedContentTypes}
       />
 
       <div className="mb-6 border rounded p-4 bg-white">

@@ -9,6 +9,7 @@ import { PageContainer } from "../components/PageContainer";
 import { OptionsPanel, DimReductionMethod } from "../components/OptionsPanel";
 import { DateRange } from "react-day-picker";
 import { filterPapersByDate } from "@/utils/filterByDate";
+import { filterPapersByContent } from "../utils/filterByContent";
 
 interface CoordData {
   [id: string]: [number, number];
@@ -29,6 +30,8 @@ export const HomePage: React.FC = () => {
     from: new Date(2025, 3, 26),
     to: new Date(2025, 4, 1),
   });
+
+  const [selectedContentTypes, setSelectedContentTypes] = useState<string[]>(["Papers"]);
 
   // 次元削減手法に応じた座標データをロード
   useEffect(() => {
@@ -55,8 +58,16 @@ export const HomePage: React.FC = () => {
     try {
       const cardResults = await searchPapers(query, 2000);
       const scatterResults = await searchPapers(query, 2000);
-      setCardPapers(filterPapersByDate(cardResults, dateRange).slice(0, topN));
-      setScatterPapers(filterPapersByDate(scatterResults, dateRange));
+      setCardPapers(filterPapersByContent(
+        filterPapersByDate(cardResults, dateRange),
+        selectedContentTypes
+      ).slice(0, topN));
+      setScatterPapers(
+        filterPapersByContent(
+          filterPapersByDate(scatterResults, dateRange),
+          selectedContentTypes
+        )
+      );
     } catch (err) {
       setError("Search failed. Please try again.");
     }
@@ -148,6 +159,8 @@ export const HomePage: React.FC = () => {
                 onMethodChange={setDimMethod}
                 dateRange={dateRange}
                 onDateRangeChange={setDateRange}
+                selectedContentTypes={selectedContentTypes}
+                onContentTypesChange={setSelectedContentTypes}
               />
 
               <div className="border rounded p-4 bg-white">

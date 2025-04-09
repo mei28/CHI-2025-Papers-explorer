@@ -23,15 +23,37 @@ interface OptionsPanelProps {
   onMethodChange: (method: DimReductionMethod) => void;
   dateRange: DateRange | undefined;
   onDateRangeChange: (range: DateRange | undefined) => void;
+  selectedContentTypes: string[];
+  onContentTypesChange: (selected: string[]) => void;
 }
+
+const AVAILABLE_CONTENT_TYPES = [
+  "Papers",
+  "Case Studies",
+  "In Person Doctoral Consortium",
+  "Alt CHI",
+  "Courses",
+  "Journal",
+  "Workshops",
+];
 
 export const OptionsPanel: React.FC<OptionsPanelProps> = ({
   selectedMethod,
   onMethodChange,
   dateRange,
   onDateRangeChange,
+  selectedContentTypes,
+  onContentTypesChange,
 }) => {
   const [open, setOpen] = useState(false);
+
+  const handleCheckboxChange = (contentType: string) => {
+    if (selectedContentTypes.includes(contentType)) {
+      onContentTypesChange(selectedContentTypes.filter((c) => c !== contentType));
+    } else {
+      onContentTypesChange([...selectedContentTypes, contentType]);
+    }
+  };
 
   return (
     <Collapsible open={open} onOpenChange={setOpen} className="my-4">
@@ -69,6 +91,22 @@ export const OptionsPanel: React.FC<OptionsPanelProps> = ({
             initialDateTo={dateRange?.to || new Date(2025, 4, 1)}
             onUpdate={({ range }) => onDateRangeChange(range)}
           />
+        </div>
+        {/* 追加：Content Type フィルタリングオプション */}
+        <div className="mt-4">
+          <p className="mb-2 text-sm">Filter by Content Type:</p>
+          <div className="flex flex-col gap-1">
+            {AVAILABLE_CONTENT_TYPES.map((type) => (
+              <label key={type} className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={selectedContentTypes.includes(type)}
+                  onChange={() => handleCheckboxChange(type)}
+                />
+                <span className="text-sm">{type}</span>
+              </label>
+            ))}
+          </div>
         </div>
       </CollapsibleContent>
     </Collapsible>
