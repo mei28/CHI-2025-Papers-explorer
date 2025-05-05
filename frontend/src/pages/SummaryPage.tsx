@@ -8,7 +8,6 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@/components/ui/toggle-group";
-import { Button } from "@/components/ui/button";
 
 import {
   Pagination,
@@ -104,15 +103,10 @@ export const SummaryPage: React.FC = () => {
           <Pagination className="justify-center mt-6 mb-10">
             <PaginationContent>
               <PaginationItem>
-                <PaginationPrevious >
-                  <Button
-                    variant="outline"
-                    onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                    disabled={currentPage === 1}
-                  >
-                    Prev
-                  </Button>
-                </PaginationPrevious>
+                <PaginationPrevious
+                  className="cursor-pointer"
+                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                />
               </PaginationItem>
 
               <PaginationItem>
@@ -122,15 +116,10 @@ export const SummaryPage: React.FC = () => {
               </PaginationItem>
 
               <PaginationItem>
-                <PaginationNext >
-                  <Button
-                    variant="outline"
-                    onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-                    disabled={currentPage === totalPages}
-                  >
-                    Next
-                  </Button>
-                </PaginationNext>
+                <PaginationNext
+                  className="cursor-pointer"
+                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                />
               </PaginationItem>
             </PaginationContent>
           </Pagination>
